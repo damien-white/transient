@@ -12,13 +12,13 @@ macro_rules! kind {
         $crate::lexer::Kind::Times
     };
     [/] => {
-        $crate::lexer::Kind::Solidus
+        $crate::lexer::Kind::Divide
     };
     [^] => {
-        $crate::lexer::Kind::Pow
+        $crate::lexer::Kind::Power
     };
     [=] => {
-        $crate::lexer::Kind::Eq
+        $crate::lexer::Kind::Equals
     };
     [.] => {
         $crate::lexer::Kind::Dot
@@ -69,7 +69,7 @@ macro_rules! kind {
     [')'] => {
         $crate::lexer::Kind::RParen
     };
-    // Multi-char
+    // Multi-character
     [string] => {
         $crate::lexer::Kind::String
     };
@@ -119,35 +119,16 @@ macro_rules! kind {
     [<=] => {
         $crate::lexer::Kind::Leq
     };
-    // Miscellaneous
-    [error] => {
-        $crate::lexer::Kind::Error
-    };
+    // Whitespace
     [ws] => {
         $crate::lexer::Kind::Whitespace
     };
+    // End of file
     [EOF] => {
         $crate::lexer::Kind::Eof
     };
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn token_kind_displays() {
-        assert_eq!(kind![+].to_string(), "+");
-        assert_eq!(kind![<=].to_string(), "<=");
-        assert_eq!(kind![let].to_string(), "let");
-        assert_eq!(kind![error].to_string(), "<?>");
-        assert_eq!(kind![comment].to_string(), "// Comment");
-    }
-
-    #[test]
-    fn spans_can_be_indexed() {
-        assert_eq!(kind![+].to_string(), "+");
-        assert_eq!(kind![<=].to_string(), "<=");
-        assert_eq!(kind![let].to_string(), "let");
-        assert_eq!(kind![error].to_string(), "<?>");
-        assert_eq!(kind![comment].to_string(), "// Comment");
-    }
+    // Error
+    [error] => {
+        $crate::lexer::Kind::Error
+    };
 }

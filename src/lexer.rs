@@ -5,7 +5,7 @@ mod rules;
 mod token;
 
 use rules::recognize_single_char;
-pub use token::{Kind, Slice, Span, Token};
+pub use token::{Kind, Span, Token};
 
 #[derive(Clone, Debug, Default)]
 pub struct Lexer;
@@ -24,10 +24,10 @@ impl Lexer {
             return None;
         };
 
-        Some(Token {
+        Some(Token::new(
             kind,
             // TODO: Fix this Span
-            span: Span { start: 0, end: len },
-        })
+            Span { start: 0, end: len },
+        ))
     }
 }

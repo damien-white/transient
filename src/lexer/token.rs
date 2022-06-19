@@ -1,8 +1,5 @@
-use core::ops::Index;
-use core::{
-    fmt,
-    ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
-};
+use std::fmt;
+use std::ops::{Index, Range};
 
 use crate::kind;
 
@@ -12,9 +9,9 @@ pub enum Kind {
     Plus,
     Minus,
     Times,
-    Solidus,
-    Pow,
-    Eq,
+    Divide,
+    Power,
+    Equals,
     Dot,
     Comma,
     Underscore,
@@ -32,7 +29,7 @@ pub enum Kind {
     RBrace,
     LParen,
     RParen,
-    // Multi-char
+    // Multi-character
     String,
     Comment,
     Integer,
@@ -43,7 +40,7 @@ pub enum Kind {
     KeywordStruct,
     KeywordIf,
     KeywordElse,
-    // Boolean Operators
+    // Operators
     And,
     Or,
     Eqq,
@@ -115,90 +112,42 @@ impl fmt::Display for Kind {
     }
 }
 
-/// Slicing operations using ranges. Works similarly to [`Index`].
-pub trait Slice<R> {
-    fn slice(&self, range: R) -> Self;
-}
-
-impl<'a> Slice<Span> for &'a str {
-    fn slice(&self, range: Span) -> Self {
-        &self[range]
-    }
-}
-
-impl<'a> Slice<Span> for &'a [u8] {
-    fn slice(&self, range: Span) -> Self {
-        &self[range]
-    }
-}
-
-macro_rules! slice_range_impl {
-    ( [$st:ident], $rt:ty ) => {
-        impl<'a, $st> Slice<$rt> for &'a [$st] {
-            fn slice(&self, range: $rt) -> Self {
-                &self[range]
-            }
-        }
-    };
-    ( $st:ty, $rt:ty ) => {
-        impl<'a> Slice<$rt> for &'a $st {
-            fn slice(&self, range: $rt) -> Self {
-                &self[range]
-            }
-        }
-    };
-}
-
-macro_rules! slice_impl {
-    ( [$st:ident] ) => {
-        slice_range_impl! {[$st], Range<usize>}
-        slice_range_impl! {[$st], RangeInclusive<usize>}
-        slice_range_impl! {[$st], RangeTo<usize>}
-        slice_range_impl! {[$st], RangeToInclusive<usize>}
-        slice_range_impl! {[$st], RangeFrom<usize>}
-        slice_range_impl! {[$st], RangeFull}
-    };
-    ($st:ty) => {
-        slice_range_impl! {$st, Range<usize>}
-        slice_range_impl! {$st, RangeInclusive<usize>}
-        slice_range_impl! {$st, RangeTo<usize>}
-        slice_range_impl! {$st, RangeToInclusive<usize>}
-        slice_range_impl! {$st, RangeFrom<usize>}
-        slice_range_impl! {$st, RangeFull}
-    };
-}
-
-slice_impl! {str}
-slice_impl! {[T]}
-
-/// Two pointers representing the start and end of a slice.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq)]
+/// A range type constructed from two indexing pointers.
+///
+/// This type is essentially a re-implementation of `std::ops::Range<usize>`.
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Span {
-    /// Start (inclusive)
+    /// The lower bound of the range (inclusive).
     pub start: usize,
-    /// End (exclusive)
+    /// The upper bound of the range (exclusive).
     pub end: usize,
 }
 
-impl Index<Span> for str {
-    type Output = str;
-
-    fn index(&self, index: Span) -> &Self::Output {
-        &self[Range::from(index)]
+impl Span {
+    /// Constructs a new `Span` from a start and end offset.
+    pub fn new(start: usize, end: usize) -> Self {
+        assert!(start <= end);
+        Self { start, end }
     }
-}
 
-impl Index<Span> for [u8] {
-    type Output = [u8];
-
-    fn index(&self, index: Span) -> &Self::Output {
-        &self[Range::from(index)]
+    /// Returns the start offset of the span.
+    pub fn start(&self) -> usize {
+        self.start
     }
-}
 
-impl From<Span> for Range<usize> {
-    fn from(span: Span) -> Self {
-        span.start..span.end
+    /// Returns the end offset of the span.
+    pub fn end(&self) -> usize {
+        self.end
+    }
+
+    /// Returns the length of the span in bytes.
+    pub fn len(&self) -> usize {
+        self.end - self.start
+    }
+
+    /// Returns `true` if the span has a length of zero bytes.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -211,27 +160,79 @@ impl From<Range<usize>> for Span {
     }
 }
 
+impl From<Span> for Range<usize> {
+    fn from(span: Span) -> Self {
+        Self {
+            start: span.start,
+            end: span.end,
+        }
+    }
+}
+
+impl Index<Span> for str {
+    type Output = str;
+
+    fn index(&self, index: Span) -> &Self::Output {
+        &self[index.start..index.end]
+    }
+}
+
+// impl<'a> Index<Span> for &'a str {
+//     type Output = str;
+
+//     fn index(&self, index: Span) -> &Self::Output {
+//         &self[index.start..index.end]
+//     }
+// }
+
+impl Index<Span> for [u8] {
+    type Output = [u8];
+
+    fn index(&self, index: Span) -> &Self::Output {
+        &self[index.start..index.end]
+    }
+}
+
 /// Individual units produced by the lexer.
 ///
 /// Each `Token` contains a token `Kind` and a `Span`. Given the input string,
 /// the token can return the text it represents via the span.
 #[derive(Copy, Clone, Eq, Hash, PartialEq)]
 pub struct Token {
-    pub kind: Kind,
-    pub span: Span,
+    /// The token kind, or variant, as defined on the `Kind` enum.
+    kind: Kind,
+    span: Span,
 }
 
 impl Token {
+    /// Constructs a `Token` from a kind and its corresponding span.
+    pub fn new(kind: Kind, span: Span) -> Self {
+        Self { kind, span }
+    }
+
+    /// Returns the `Kind` of the token.
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+
+    /// Returns the `Span` of the token.
+    pub fn span(&self) -> Span {
+        self.span
+    }
+
+    /// Returns the text of the token by indexing it with its span.
     pub fn text<'input>(&self, input: &'input str) -> &'input str {
         &input[self.span]
     }
 
+    /// Returns the length of the token's span.
     pub fn len(&self) -> usize {
-        self.span.end - self.span.start
+        self.span.len()
     }
 
-    pub const fn is_empty(&self) -> bool {
-        self.span.start == self.span.end
+    /// Returns true if the token's span is empty.
+    pub fn is_empty(&self) -> bool {
+        self.span.is_empty()
     }
 }
 
@@ -254,14 +255,28 @@ impl fmt::Display for Token {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::kind;
 
     #[test]
-    fn tokens_can_be_inspected() {
-        let token1 = Token {
+    fn token_kind_displays() {
+        assert_eq!(kind![+].to_string(), "+");
+        assert_eq!(kind![<=].to_string(), "<=");
+        assert_eq!(kind![let].to_string(), "let");
+        assert_eq!(kind![error].to_string(), "<?>");
+        assert_eq!(kind![comment].to_string(), "// Comment");
+    }
+
+    #[test]
+    fn token_indexing_with_spans() {
+        let token = Token {
             kind: Kind::KeywordLet,
             span: Span { start: 0, end: 3 },
         };
 
-        assert_eq!(token1.to_string(), r#"let"#);
+        assert_eq!(token.text("let x = 5;"), "let");
+        assert_eq!(token.len(), 3);
+
+        token.span().end = 4;
+        assert_ne!(token.len(), 4);
     }
 }
