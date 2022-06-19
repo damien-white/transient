@@ -5,8 +5,8 @@ use crate::lexer::Kind;
 
 /// Matches a single, unambiguous character in the token stream.
 ///
-/// Tokens that may only be a part of a larger token return `None`.
-pub(crate) const fn recognize_single_char(c: char) -> Option<Kind> {
+/// Tokens that may only be a part of a larger token kind return `None`.
+pub(crate) const fn single_character_token(c: char) -> Option<Kind> {
     Some(match c {
         '+' => kind![+],
         '-' => kind![-],

@@ -118,16 +118,20 @@ impl fmt::Display for Kind {
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Span {
     /// The lower bound of the range (inclusive).
-    pub start: usize,
+    start: usize,
     /// The upper bound of the range (exclusive).
-    pub end: usize,
+    end: usize,
 }
 
 impl Span {
     /// Constructs a new `Span` from a start and end offset.
-    pub fn new(start: usize, end: usize) -> Self {
-        assert!(start <= end);
-        Self { start, end }
+    pub fn new(range: Range<usize>) -> Self {
+        assert!(range.start <= range.end);
+        // Self::from(range)
+        Self {
+            start: range.start,
+            end: range.end,
+        }
     }
 
     /// Returns the start offset of the span.
@@ -176,14 +180,6 @@ impl Index<Span> for str {
         &self[index.start..index.end]
     }
 }
-
-// impl<'a> Index<Span> for &'a str {
-//     type Output = str;
-
-//     fn index(&self, index: Span) -> &Self::Output {
-//         &self[index.start..index.end]
-//     }
-// }
 
 impl Index<Span> for [u8] {
     type Output = [u8];
