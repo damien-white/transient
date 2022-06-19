@@ -15,6 +15,9 @@ Cargo.lock
 .envrc
 !.env.example
 
+# Scripts
+/scripts/
+
 # Internal
 /*internal/
 /*spec/

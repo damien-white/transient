@@ -72,9 +72,9 @@ impl fmt::Display for Kind {
                 kind![^] => "^",
                 kind![=] => "=",
                 kind![.] => ".",
-                kind!(,) => ",",
-                kind!(_) => "_",
-                kind!(!) => "!",
+                kind![,] => ",",
+                kind![_] => "_",
+                kind![!] => "!",
                 kind![&] => "&",
                 kind![|] => "|",
                 kind![:] => ":",
@@ -262,6 +262,6 @@ mod tests {
             span: Span { start: 0, end: 3 },
         };
 
-        assert_eq!(token1.to_string(), r#"let"#)
+        assert_eq!(token1.to_string(), r#"let"#);
     }
 }
