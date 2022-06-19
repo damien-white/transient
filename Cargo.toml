@@ -1,0 +1,33 @@
+[package]
+name = "transient"
+version = "0.1.0"
+edition = "2021"
+authors = ["Peter Donovan <peter@darkfusion.io>"]
+description = """
+Parser for transforming loosely-typed JSON data into well-formed Rust types.
+"""
+repository = "https://github.com/dark-fusion/transient"
+readme = "README.md"
+license = "MIT"
+resolver = "2"
+
+[lib]
+name = "transient"
+path = "src/lib.rs"
+
+[dependencies]
+
+[profile.bench]
+debug = true
+lto = true
+codegen-units = 1
+
+[profile.dev]
+# Disabling debug info speeds up build times during development.
+# Comment out the following line to re-enable debug info.
+debug = 0
+
+[profile.release]
+incremental = true
+debug = 0    # Set this to 1 or 2 to get more useful backtraces in debugger.
+lto = true

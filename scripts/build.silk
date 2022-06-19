@@ -1,0 +1,24 @@
+// This is a schema-definiton language (SDL)
+
+// Command line parser
+
+/*
+The point of this language is to write my build scripts, tasks and jobs in
+my own, mini "language".
+
+It's high-level shell scripting.
+*/
+
+// This is the `List` type. It's a generic collection that carries with it a
+// pointer to it's
+BuildCommand {
+    build: true,
+    value: T,
+}
+
+@property()
+fn main(): () {
+
+}
+
+print(

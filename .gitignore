@@ -1,0 +1,34 @@
+### transient - gitignore
+
+## Rust
+# Build output and other generated artifacts
+/target
+**/*.rs.bk
+.cargo-ok
+# Comment out the following line if executable
+Cargo.lock
+
+## Local development
+# Environment variables
+.env
+.env*
+.envrc
+!.env.example
+
+# Internal
+/*internal/
+/*spec/
+
+# Logs
+logs/
+
+# IDEs and Editors
+.idea/
+.vscode/*
+
+## Misc
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
