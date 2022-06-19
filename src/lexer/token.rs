@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::{Index, Range};
+use std::ops::Index;
 
 use crate::kind;
 
@@ -125,13 +125,9 @@ pub struct Span {
 
 impl Span {
     /// Constructs a new `Span` from a start and end offset.
-    pub fn new(range: Range<usize>) -> Self {
-        assert!(range.start <= range.end);
-        // Self::from(range)
-        Self {
-            start: range.start,
-            end: range.end,
-        }
+    pub fn new(start: usize, end: usize) -> Self {
+        assert!(start <= end);
+        Self { start, end }
     }
 
     /// Returns the start offset of the span.
@@ -155,23 +151,23 @@ impl Span {
     }
 }
 
-impl From<Range<usize>> for Span {
-    fn from(range: Range<usize>) -> Self {
-        Self {
-            start: range.start,
-            end: range.end,
-        }
-    }
-}
-
-impl From<Span> for Range<usize> {
-    fn from(span: Span) -> Self {
-        Self {
-            start: span.start,
-            end: span.end,
-        }
-    }
-}
+// impl From<Range<usize>> for Span {
+//     fn from(range: Range<usize>) -> Self {
+//         Self {
+//             start: range.start,
+//             end: range.end,
+//         }
+//     }
+// }
+//
+// impl From<Span> for Range<usize> {
+//     fn from(span: Span) -> Self {
+//         Self {
+//             start: span.start,
+//             end: span.end,
+//         }
+//     }
+// }
 
 impl Index<Span> for str {
     type Output = str;
@@ -226,7 +222,7 @@ impl Token {
         self.span.len()
     }
 
-    /// Returns true if the token's span is empty.
+    /// Returns true if the token's span comprises an empty range.
     pub fn is_empty(&self) -> bool {
         self.span.is_empty()
     }

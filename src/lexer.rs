@@ -1,3 +1,5 @@
+//! This module contains the core logic for the lexical scanner.
+
 // Macros
 pub mod macros;
 mod rules;
@@ -10,15 +12,33 @@ pub use token::{Kind, Span, Token};
 use crate::kind;
 
 #[derive(Clone, Debug, Default)]
-pub struct Lexer;
+pub struct Lexer<'input> {
+    input: &'input str,
+    position: usize,
+    eof: bool,
+}
 
-impl Lexer {
-    pub fn new() -> Self {
-        Self {}
+impl<'input> Lexer<'input> {
+    pub fn new(input: &'input str) -> Self {
+        Self {
+            input,
+            ..Self::default()
+        }
     }
 
-    /// Consumes the next token after checking its validity.
-    fn valid_token(&self, input: &str) -> Option<Token> {
+    /// Iterates over input, collecting tokens into a `Vec`.
+    pub fn tokenize(&mut self) -> Vec<Token> {
+        self.collect()
+    }
+
+    /// Attempts to consume the next token, emitting an error on failure.
+    pub fn next_token(&mut self, input: &str) -> Token {
+        self.validate(input)
+            .unwrap_or_else(|| self.handle_error(input))
+    }
+
+    /// Validates the next token from the input source.
+    fn validate(&mut self, input: &str) -> Option<Token> {
         let next = input.chars().next().unwrap();
         let (len, kind) = if let Some(kind) = single_character_token(next) {
             (1, kind)
@@ -26,42 +46,47 @@ impl Lexer {
             return None;
         };
 
-        Some(Token::new(
-            kind,
-            // TODO: Fix this Span
-            Span::new(0..len),
-        ))
-    }
+        // Set the span indices
+        let start = self.position;
+        self.position += len;
 
-    /// Attempts to consume the next token, emitting an error on failure.
-    pub fn next_token(&self, input: &str) -> Token {
-        self.valid_token(input)
-            .unwrap_or_else(|| self.invalid_token(input))
+        Some(Token::new(kind, Span::new(start, start + len)))
     }
 
     /// Creates an error `Token` when the `next_token` method fails.
-    fn invalid_token(&self, input: &str) -> Token {
+    fn handle_error(&mut self, input: &str) -> Token {
+        let start = self.position;
+
         let len = input
             .char_indices()
-            .find(|(pos, _)| self.valid_token(&input[*pos..]).is_some())
+            .find(|(pos, _)| self.validate(&input[*pos..]).is_some())
             .map(|(pos, _)| pos)
             .unwrap_or_else(|| input.len());
-
         debug_assert!(len <= input.len());
-        Token::new(kind![error], Span::new(0..len))
+
+        let len = len;
+        self.position = start + len;
+        Token::new(kind![error], Span::new(start, start + len))
     }
+}
 
-    pub fn tokenize(&self, input: &str) -> Vec<Token> {
-        let mut output = vec![];
-        let mut suffix = input;
+impl<'input> Iterator for Lexer<'input> {
+    type Item = Token;
 
-        while !suffix.is_empty() {
-            let token = self.next_token(suffix);
-            output.push(token);
-            suffix = &suffix[token.len()..];
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.position >= self.input.len() {
+            if self.eof {
+                return None;
+            }
+
+            self.eof = true;
+
+            Some(Token::new(
+                kind![EOF],
+                Span::new(self.position, self.position),
+            ))
+        } else {
+            Some(self.next_token(&self.input[self.position..]))
         }
-
-        output.push(Token::new(kind![EOF], Span::new(input.len()..input.len())));
-        output
     }
 }
