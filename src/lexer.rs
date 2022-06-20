@@ -1,15 +1,13 @@
-//! This module contains the core logic for the lexical scanner.
+//! This module contains the lexer, which tokenizes the input source.
 
-// Macros
-pub mod macros;
-
-mod rules;
-mod token;
-
-use rules::{define_rules, unambiguous_single_char, Rule};
 pub use token::{Kind, Span, Token};
 
 use crate::kind;
+use crate::lexer::rules::{definitions, unambiguous_single_char, Rule};
+
+pub mod macros;
+mod rules;
+mod token;
 
 #[derive(Default)]
 pub struct Lexer<'input> {
@@ -25,7 +23,7 @@ impl<'input> Lexer<'input> {
             input,
             position: 0,
             eof: false,
-            rules: define_rules(),
+            rules: definitions(),
         }
     }
 
@@ -36,28 +34,33 @@ impl<'input> Lexer<'input> {
 
     /// Attempts to consume the next token, emitting an error on failure.
     pub fn next_token(&mut self, input: &str) -> Token {
-        self.validate(input)
-            .unwrap_or_else(|| self.handle_error(input))
+        match self.validate(input) {
+            Some(token) => token,
+            None => self.handle_error(input),
+        }
     }
 
     /// Validates the next token from the input source.
     fn validate(&mut self, input: &str) -> Option<Token> {
-        let next = input.chars().next().unwrap();
+        let next = input.chars().next()?;
+
+        /* Whitespace tokens */
         let (len, kind) = if next.is_whitespace() {
             (
                 input
                     .char_indices()
                     .take_while(|(_, c)| c.is_whitespace())
                     .last()
-                    // Safe to unwrap; guaranteed to be at least one whitespace char
                     .unwrap()
                     .0
                     + 1,
                 kind![ws],
             )
+            /* Unambiguous single-character tokens */
         } else if let Some(kind) = unambiguous_single_char(next) {
             (1, kind)
         } else {
+            /* Single character (ambiguous), multi-character and keywords */
             self.rules
                 .iter()
                 .rev()

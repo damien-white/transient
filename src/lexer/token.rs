@@ -232,8 +232,9 @@ impl fmt::Display for Token {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::kind;
+
+    use super::*;
 
     #[test]
     fn token_kind_displays() {

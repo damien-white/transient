@@ -16,6 +16,8 @@ name = "transient"
 path = "src/lib.rs"
 
 [dependencies]
+lazy_static = "1"
+regex = "1"
 
 [profile.bench]
 debug = true

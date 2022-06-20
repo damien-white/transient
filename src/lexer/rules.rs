@@ -3,11 +3,13 @@
 use crate::kind;
 use crate::lexer::Kind;
 
+/// Defines a single rule for the lexer.
 pub(crate) struct Rule {
     pub kind: Kind,
     pub matches: fn(&str) -> Option<usize>,
 }
 
+/// Match against single-character token kinds, returning `None` on failure.
 fn match_single_char(input: &str, c: char) -> Option<usize> {
     input
         .chars()
@@ -15,7 +17,8 @@ fn match_single_char(input: &str, c: char) -> Option<usize> {
         .and_then(|ch| if ch == c { Some(1) } else { None })
 }
 
-fn match_two_chars(input: &str, first: char, second: char) -> Option<usize> {
+/// Match against multi-character token kinds, returning `None` on failure.
+fn match_multi_char(input: &str, first: char, second: char) -> Option<usize> {
     if input.len() >= 2 {
         match_single_char(input, first)
             .and_then(|_| match_single_char(&input[1..], second).map(|_| 2))
@@ -24,11 +27,13 @@ fn match_two_chars(input: &str, first: char, second: char) -> Option<usize> {
     }
 }
 
+/// Match against keyword token kinds, returning `None` on failure.
 fn match_keyword(input: &str, keyword: &str) -> Option<usize> {
     input.starts_with(keyword).then(|| keyword.len())
 }
 
-pub(crate) fn define_rules() -> Vec<Rule> {
+/// Provides the rules to the lexical scanner.
+pub(crate) fn definitions() -> Vec<Rule> {
     vec![
         Rule {
             kind: kind![!],
@@ -56,27 +61,27 @@ pub(crate) fn define_rules() -> Vec<Rule> {
         },
         Rule {
             kind: kind![==],
-            matches: |input| match_two_chars(input, '=', '='),
+            matches: |input| match_multi_char(input, '=', '='),
         },
         Rule {
             kind: kind![!=],
-            matches: |input| match_two_chars(input, '!', '='),
+            matches: |input| match_multi_char(input, '!', '='),
         },
         Rule {
             kind: kind![&&],
-            matches: |input| match_two_chars(input, '&', '&'),
+            matches: |input| match_multi_char(input, '&', '&'),
         },
         Rule {
             kind: kind![||],
-            matches: |input| match_two_chars(input, '|', '|'),
+            matches: |input| match_multi_char(input, '|', '|'),
         },
         Rule {
             kind: kind![<=],
-            matches: |input| match_two_chars(input, '<', '='),
+            matches: |input| match_multi_char(input, '<', '='),
         },
         Rule {
             kind: kind![>=],
-            matches: |input| match_two_chars(input, '>', '='),
+            matches: |input| match_multi_char(input, '>', '='),
         },
         Rule {
             kind: kind![let],
