@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn unknown_or_unexpected_input() {
-        let input = "{$hello$+";
+        let input = "{$$$$$$$+";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
         assert_tokens!(tokens, [kind!['{'], kind![error], kind![+], kind![EOF],]);
@@ -56,7 +56,7 @@ mod tests {
             assert_eq!(dot.span(), Span::new(3, 4));
         }
         {
-            let input = "{$hello$+";
+            let input = "{$$$$$$$+";
             let mut lexer = Lexer::new(input);
             let tokens = lexer.tokenize();
             let error = tokens[1];
@@ -160,5 +160,105 @@ mod tests {
                 kind![EOF],
             ]
         )
+    }
+
+    #[test]
+    fn function_definition() {
+        let input = r#"
+// Testing a function
+fn build_project(repo_name: String, strict: bool) {
+    let time = "Date time: \" test" + 3 / 2.4e-2^5;
+    let iter = time.chars();
+    if let Some(c) = iter.next() {
+        time = time + c;
+    } else if !strict {
+        time = time + ",";
+    }
+}
+"#;
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer
+            .tokenize()
+            .into_iter()
+            .filter(|t| t.kind() != kind![ws])
+            .collect::<Vec<_>>();
+
+        #[rustfmt::skip]
+        assert_tokens!(
+            tokens,
+            [
+                // comment line
+                kind![comment],
+                // function signature
+                kind![fn], kind![ident], kind!['('],
+                    kind![ident], kind![:], kind![ident], kind![,],
+                    kind![ident], kind![:], kind![ident],
+                kind![')'], kind!['{'],
+                    // function body
+                    // `time` assignment
+                    kind![let], kind![ident], kind![=], kind![string], kind![+], kind![int],
+                        kind![/], kind![float], kind![^], kind![int], kind![;],
+                    // `iter` assignment
+                    kind![let], kind![ident], kind![=], kind![ident], kind![.], kind![ident],
+                        kind!['('], kind![')'], kind![;],
+                    // if let Some ... expr
+                    kind![if], kind![let], kind![ident], kind!['('], kind![ident], kind![')'],
+                        kind![=], kind![ident], kind![.], kind![ident], kind!['('], kind![')'],
+                    kind!['{'],
+                        // `time` reassignment
+                        kind![ident], kind![=], kind![ident], kind![+], kind![ident], kind![;],
+                    // else if
+                    kind!['}'], kind![else], kind![if], kind![!], kind![ident], kind!['{'],
+                        // `time` re-assignment
+                        kind![ident], kind![=], kind![ident], kind![+], kind![string], kind![;],
+                    kind!['}'], // end if
+                kind!['}'], // end fn
+            kind![EOF], // EOF
+            ]
+        );
+    }
+
+    #[test]
+    fn struct_definition() {
+        let input = r#"
+struct Foo<T> {
+    bar: Bar<T>,
+}
+"#;
+        let mut lexer = Lexer::new(input);
+        let tokens: Vec<_> = lexer
+            .tokenize()
+            .into_iter()
+            .filter(|t| t.kind() != kind![ws])
+            .collect();
+        assert_tokens!(
+            tokens,
+            [
+                // struct definition with generic type
+                kind![struct],
+                kind![ident],
+                kind![<],
+                kind![ident],
+                kind![>],
+                kind!['{'],
+                // struct field with type `Bar<T>`
+                kind![ident],
+                kind![:],
+                kind![ident],
+                kind![<],
+                kind![ident],
+                kind![>],
+                kind![,],
+                kind!['}'], // end struct
+                kind![EOF],
+            ]
+        );
+        let bar_property = tokens[6];
+        assert_eq!(bar_property.span(), Span::new(21, 24));
+        assert_eq!(bar_property.text(input), "bar");
+
+        let foo_struct_def = tokens[1];
+        assert_eq!(foo_struct_def.span(), Span::new(8, 11));
+        assert_eq!(foo_struct_def.text(input), "Foo");
     }
 }
