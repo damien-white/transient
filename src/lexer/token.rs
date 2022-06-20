@@ -77,15 +77,15 @@ impl fmt::Display for Kind {
                 kind![:] => ":",
                 kind![;] => ";",
                 // Brackets
-                kind![<] => "'<'",
-                kind![>] => "'>'",
+                kind![<] => "<",
+                kind![>] => ">",
                 kind!['['] => "]",
                 kind![']'] => "]",
                 kind!['('] => "(",
                 kind![')'] => ")",
-                kind!['{'] => "'{'",
-                kind!['}'] => "'}'",
-                // Multi-char
+                kind!['{'] => "{",
+                kind!['}'] => "}",
+                // Multi-character
                 kind![string] => "String",
                 kind![comment] => "// Comment",
                 kind![int] => "Int",
@@ -103,10 +103,12 @@ impl fmt::Display for Kind {
                 kind![!=] => "!=",
                 kind![>=] => ">=",
                 kind![<=] => "<=",
-                // Miscellaneous
-                kind![error] => "<?>",
+                // Whitespace
                 kind![ws] => "<WS>",
+                // End of file
                 kind![EOF] => "<EOF>",
+                // Error
+                kind![error] => "<?>",
             }
         )
     }
@@ -150,24 +152,6 @@ impl Span {
         self.len() == 0
     }
 }
-
-// impl From<Range<usize>> for Span {
-//     fn from(range: Range<usize>) -> Self {
-//         Self {
-//             start: range.start,
-//             end: range.end,
-//         }
-//     }
-// }
-//
-// impl From<Span> for Range<usize> {
-//     fn from(span: Span) -> Self {
-//         Self {
-//             start: span.start,
-//             end: span.end,
-//         }
-//     }
-// }
 
 impl Index<Span> for str {
     type Output = str;
@@ -232,7 +216,7 @@ impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:?} - {{ {} .. {} }}>",
+            "{:?} - {{ {} .. {} }}",
             self.kind, self.span.start, self.span.end
         )
     }

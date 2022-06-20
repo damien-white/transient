@@ -2,27 +2,30 @@
 
 // Macros
 pub mod macros;
-mod rules;
 
+mod rules;
 mod token;
 
-use rules::single_character_token;
+use rules::{define_rules, unambiguous_single_char, Rule};
 pub use token::{Kind, Span, Token};
 
 use crate::kind;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Default)]
 pub struct Lexer<'input> {
     input: &'input str,
     position: usize,
     eof: bool,
+    rules: Vec<Rule>,
 }
 
 impl<'input> Lexer<'input> {
     pub fn new(input: &'input str) -> Self {
         Self {
             input,
-            ..Self::default()
+            position: 0,
+            eof: false,
+            rules: define_rules(),
         }
     }
 
@@ -40,10 +43,26 @@ impl<'input> Lexer<'input> {
     /// Validates the next token from the input source.
     fn validate(&mut self, input: &str) -> Option<Token> {
         let next = input.chars().next().unwrap();
-        let (len, kind) = if let Some(kind) = single_character_token(next) {
+        let (len, kind) = if next.is_whitespace() {
+            (
+                input
+                    .char_indices()
+                    .take_while(|(_, c)| c.is_whitespace())
+                    .last()
+                    // Safe to unwrap; guaranteed to be at least one whitespace char
+                    .unwrap()
+                    .0
+                    + 1,
+                kind![ws],
+            )
+        } else if let Some(kind) = unambiguous_single_char(next) {
             (1, kind)
         } else {
-            return None;
+            self.rules
+                .iter()
+                .rev()
+                .filter_map(|rule| Some(((rule.matches)(input)?, rule.kind)))
+                .max_by_key(|&(len, _)| len)?
         };
 
         // Set the span indices
@@ -86,7 +105,8 @@ impl<'input> Iterator for Lexer<'input> {
                 Span::new(self.position, self.position),
             ))
         } else {
-            Some(self.next_token(&self.input[self.position..]))
+            let remaining = &self.input[self.position..];
+            Some(self.next_token(remaining))
         }
     }
 }

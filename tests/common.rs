@@ -60,3 +60,43 @@ fn token_spans() {
         assert_eq!(error.span(), Span::new(1, 8));
     }
 }
+
+#[test]
+fn single_char_tokens_with_whitespace() {
+    let input = "    +  - (.):  ";
+    let mut lexer = Lexer::new(input);
+    let tokens = lexer.tokenize();
+    let leading_whitespace = &tokens[0];
+    assert_eq!(leading_whitespace.kind(), kind![ws]);
+    assert_eq!(leading_whitespace.len(), 4);
+
+    let between_plus_and_minus = &tokens[2];
+    assert_eq!(between_plus_and_minus.kind(), kind![ws]);
+    assert_eq!(between_plus_and_minus.len(), 2);
+
+    let between_minus_and_left_paren = &tokens[4];
+    assert_eq!(between_minus_and_left_paren.kind(), kind![ws]);
+    assert_eq!(between_minus_and_left_paren.len(), 1);
+
+    let trailing_whitespace = &tokens[9];
+    assert_eq!(trailing_whitespace.kind(), kind![ws]);
+    assert_eq!(trailing_whitespace.len(), 2);
+
+    let tokens = tokens
+        .into_iter()
+        .filter(|t| t.kind() != kind![ws])
+        .collect::<Vec<_>>();
+
+    assert_tokens!(
+        tokens,
+        [
+            kind![+],
+            kind![-],
+            kind!['('],
+            kind![.],
+            kind![')'],
+            kind![:],
+            kind![EOF],
+        ]
+    )
+}
