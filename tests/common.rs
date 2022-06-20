@@ -98,5 +98,62 @@ fn single_char_tokens_with_whitespace() {
             kind![:],
             kind![EOF],
         ]
+    );
+}
+
+#[test]
+fn ambiguous_multi_character_tokens() {
+    let input = "&&=<=_!=||";
+    let mut lexer = Lexer::new(input);
+    let tokens = lexer.tokenize();
+    assert_tokens!(
+        tokens,
+        [
+            kind![&&],
+            kind![=],
+            kind![<=],
+            kind![_],
+            kind![!=],
+            kind![||],
+            kind![EOF],
+        ]
+    );
+}
+
+#[test]
+fn keyword_tokens() {
+    let input = "let fn struct if else";
+    let mut lexer = Lexer::new(input);
+    let tokens = lexer.tokenize();
+    assert_tokens!(
+        tokens,
+        [
+            kind![let],
+            kind![ws],
+            kind![fn],
+            kind![ws],
+            kind![struct],
+            kind![ws],
+            kind![if],
+            kind![ws],
+            kind![else],
+            kind![EOF],
+        ]
+    );
+
+    let tokens = tokens
+        .iter()
+        .filter(|&t| t.kind() != kind![ws])
+        .collect::<Vec<_>>();
+    assert_tokens!(
+        tokens,
+        [
+            kind![let],
+            kind![fn],
+            kind![struct],
+            kind![if],
+            kind![else],
+            kind![EOF],
+        ]
     )
 }

@@ -85,6 +85,7 @@ macro_rules! kind {
     [ident] => {
         $crate::lexer::Kind::Ident
     };
+    // Keywords
     [let] => {
         $crate::lexer::Kind::KeywordLet
     };

@@ -35,6 +35,7 @@ pub enum Kind {
     Integer,
     Float,
     Ident,
+    // Keywords
     KeywordLet,
     KeywordFn,
     KeywordStruct,
@@ -91,6 +92,7 @@ impl fmt::Display for Kind {
                 kind![int] => "Int",
                 kind![float] => "Float",
                 kind![ident] => "Identifier",
+                // Keywords
                 kind![let] => "let",
                 kind![fn] => "fn",
                 kind![struct] => "struct",

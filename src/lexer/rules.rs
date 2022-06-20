@@ -17,13 +17,8 @@ fn match_single_char(input: &str, c: char) -> Option<usize> {
 
 fn match_two_chars(input: &str, first: char, second: char) -> Option<usize> {
     if input.len() >= 2 {
-        match_single_char(input, first).and_then(|val1| {
-            println!("val1: {val1}");
-            match_single_char(&input[1..], second).map(|val2| {
-                println!("val2: {val2}");
-                2
-            })
-        })
+        match_single_char(input, first)
+            .and_then(|_| match_single_char(&input[1..], second).map(|_| 2))
     } else {
         None
     }
