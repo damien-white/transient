@@ -79,8 +79,8 @@ macro_rules! kind {
     [int] => {
         $crate::lexer::Kind::Integer
     };
-    [float] => {
-        $crate::lexer::Kind::Float
+    [double] => {
+        $crate::lexer::Kind::Double
     };
     [ident] => {
         $crate::lexer::Kind::Ident

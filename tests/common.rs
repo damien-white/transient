@@ -197,7 +197,7 @@ fn build_project(repo_name: String, strict: bool) {
                     // function body
                     // `time` assignment
                     kind![let], kind![ident], kind![=], kind![string], kind![+], kind![int],
-                        kind![/], kind![float], kind![^], kind![int], kind![;],
+                        kind![/], kind![double], kind![^], kind![int], kind![;],
                     // `iter` assignment
                     kind![let], kind![ident], kind![=], kind![ident], kind![.], kind![ident],
                         kind!['('], kind![')'], kind![;],

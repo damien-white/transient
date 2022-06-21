@@ -3,17 +3,17 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+use super::token::Kind;
 use crate::kind;
-use crate::lexer::Kind;
 
 lazy_static! {
     static ref COMMENT_REGEX: Regex =
         Regex::new(r#"^//[^\n]*\n"#).expect("Comment regex must be valid.");
     static ref STRING_REGEX: Regex =
         Regex::new(r#"^"((\\"|\\\\)|[^\\"])*""#).expect("String regex must be valid.");
-    static ref FLOAT_REGEX: Regex =
-        Regex::new(r#"^((\d+\.\d+)|(\.\d+))([eE][-+]?\d+)?"#).expect("Float regex must be valid.");
-    static ref INT_REGEX: Regex = Regex::new(r#"^(0|\d+)"#).expect("Float regex must be valid.");
+    static ref DOUBLE_REGEX: Regex =
+        Regex::new(r#"^((\d+\.\d+)|(\.\d+))([eE][-+]?\d+)?"#).expect("Double regex must be valid.");
+    static ref INT_REGEX: Regex = Regex::new(r#"^(0|\d+)"#).expect("Double regex must be valid.");
     static ref IDENT_REGEX: Regex =
         Regex::new(r#"^([a-zA-Z]|_)([a-zA-Z]|_|\d)*"#).expect("Identifier regex must be valid.");
 }
@@ -140,8 +140,8 @@ pub(crate) fn definitions() -> Vec<Rule> {
             matches: |input| match_regex(input, &INT_REGEX),
         },
         Rule {
-            kind: kind![float],
-            matches: |input| match_regex(input, &FLOAT_REGEX),
+            kind: kind![double],
+            matches: |input| match_regex(input, &DOUBLE_REGEX),
         },
         Rule {
             kind: kind![ident],

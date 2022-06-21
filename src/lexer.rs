@@ -1,9 +1,9 @@
 //! This module contains the lexer, which tokenizes the input source.
 
+use rules::{definitions, unambiguous_single_char, Rule};
 pub use token::{Kind, Span, Token};
 
 use crate::kind;
-use crate::lexer::rules::{definitions, unambiguous_single_char, Rule};
 
 pub mod macros;
 mod rules;

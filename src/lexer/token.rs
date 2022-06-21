@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::Index;
+use std::ops::{Index, Range};
 
 use crate::kind;
 
@@ -33,7 +33,7 @@ pub enum Kind {
     String,
     Comment,
     Integer,
-    Float,
+    Double,
     Ident,
     // Keywords
     KeywordLet,
@@ -90,7 +90,7 @@ impl fmt::Display for Kind {
                 kind![string] => "String",
                 kind![comment] => "// Comment",
                 kind![int] => "Int",
-                kind![float] => "Float",
+                kind![double] => "Double",
                 kind![ident] => "Identifier",
                 // Keywords
                 kind![let] => "let",
@@ -155,6 +155,24 @@ impl Span {
     }
 }
 
+impl From<Range<usize>> for Span {
+    fn from(range: Range<usize>) -> Self {
+        Span {
+            start: range.start,
+            end: range.end,
+        }
+    }
+}
+
+impl From<Span> for Range<usize> {
+    fn from(span: Span) -> Self {
+        Range {
+            start: span.start,
+            end: span.end,
+        }
+    }
+}
+
 impl Index<Span> for str {
     type Output = str;
 
@@ -198,7 +216,7 @@ impl Token {
         self.span
     }
 
-    /// Returns the text of the token by indexing it with its span.
+    /// Returns the token as text by indexing the input source with its span.
     pub fn text<'input>(&self, input: &'input str) -> &'input str {
         &input[self.span]
     }
@@ -254,8 +272,5 @@ mod tests {
 
         assert_eq!(token.text("let x = 5;"), "let");
         assert_eq!(token.len(), 3);
-
-        token.span().end = 4;
-        assert_ne!(token.len(), 4);
     }
 }
