@@ -1,6 +1,6 @@
 /// Macro for referencing a token's `Kind`
 #[macro_export]
-macro_rules! kind {
+macro_rules! tk {
     // Single characters
     [+] => {
         $crate::lexer::Kind::Plus
@@ -76,14 +76,14 @@ macro_rules! kind {
     [comment] => {
         $crate::lexer::Kind::Comment
     };
-    [int] => {
+    [integer] => {
         $crate::lexer::Kind::Integer
     };
     [double] => {
         $crate::lexer::Kind::Double
     };
-    [ident] => {
-        $crate::lexer::Kind::Ident
+    [identifier] => {
+        $crate::lexer::Kind::Identifier
     };
     // Keywords
     [let] => {

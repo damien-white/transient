@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ops::{Index, Range};
 
-use crate::kind;
+use crate::tk;
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Kind {
@@ -34,7 +34,7 @@ pub enum Kind {
     Comment,
     Integer,
     Double,
-    Ident,
+    Identifier,
     // Keywords
     KeywordLet,
     KeywordFn,
@@ -63,54 +63,54 @@ impl fmt::Display for Kind {
             "{}",
             match self {
                 // Single characters
-                kind![+] => "+",
-                kind![-] => "-",
-                kind![*] => "*",
-                kind![/] => "/",
-                kind![^] => "^",
-                kind![=] => "=",
-                kind![.] => ".",
-                kind![,] => ",",
-                kind![_] => "_",
-                kind![!] => "!",
-                kind![&] => "&",
-                kind![|] => "|",
-                kind![:] => ":",
-                kind![;] => ";",
+                tk![+] => "+",
+                tk![-] => "-",
+                tk![*] => "*",
+                tk![/] => "/",
+                tk![^] => "^",
+                tk![=] => "=",
+                tk![.] => ".",
+                tk![,] => ",",
+                tk![_] => "_",
+                tk![!] => "!",
+                tk![&] => "&",
+                tk![|] => "|",
+                tk![:] => ":",
+                tk![;] => ";",
                 // Brackets
-                kind![<] => "<",
-                kind![>] => ">",
-                kind!['['] => "]",
-                kind![']'] => "]",
-                kind!['('] => "(",
-                kind![')'] => ")",
-                kind!['{'] => "{",
-                kind!['}'] => "}",
+                tk![<] => "<",
+                tk![>] => ">",
+                tk!['['] => "]",
+                tk![']'] => "]",
+                tk!['('] => "(",
+                tk![')'] => ")",
+                tk!['{'] => "{",
+                tk!['}'] => "}",
                 // Multi-character
-                kind![string] => "String",
-                kind![comment] => "// Comment",
-                kind![int] => "Int",
-                kind![double] => "Double",
-                kind![ident] => "Identifier",
+                tk![string] => "String",
+                tk![comment] => "// Comment",
+                tk![integer] => "Integer",
+                tk![double] => "Double",
+                tk![identifier] => "Identifier",
                 // Keywords
-                kind![let] => "let",
-                kind![fn] => "fn",
-                kind![struct] => "struct",
-                kind![if] => "if",
-                kind![else] => "else",
+                tk![let] => "let",
+                tk![fn] => "fn",
+                tk![struct] => "struct",
+                tk![if] => "if",
+                tk![else] => "else",
                 // Operators
-                kind![&&] => "&&",
-                kind![||] => "||",
-                kind![==] => "==",
-                kind![!=] => "!=",
-                kind![>=] => ">=",
-                kind![<=] => "<=",
+                tk![&&] => "&&",
+                tk![||] => "||",
+                tk![==] => "==",
+                tk![!=] => "!=",
+                tk![>=] => ">=",
+                tk![<=] => "<=",
                 // Whitespace
-                kind![ws] => "<WS>",
+                tk![ws] => "<WS>",
                 // End of file
-                kind![EOF] => "<EOF>",
+                tk![EOF] => "<EOF>",
                 // Error
-                kind![error] => "<?>",
+                tk![error] => "<?>",
             }
         )
     }
@@ -250,17 +250,17 @@ impl fmt::Display for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::kind;
+    use crate::tk;
 
     use super::*;
 
     #[test]
     fn token_kind_displays() {
-        assert_eq!(kind![+].to_string(), "+");
-        assert_eq!(kind![<=].to_string(), "<=");
-        assert_eq!(kind![let].to_string(), "let");
-        assert_eq!(kind![error].to_string(), "<?>");
-        assert_eq!(kind![comment].to_string(), "// Comment");
+        assert_eq!(tk![+].to_string(), "+");
+        assert_eq!(tk![<=].to_string(), "<=");
+        assert_eq!(tk![let].to_string(), "let");
+        assert_eq!(tk![error].to_string(), "<?>");
+        assert_eq!(tk![comment].to_string(), "// Comment");
     }
 
     #[test]

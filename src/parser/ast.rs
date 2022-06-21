@@ -3,7 +3,7 @@ use crate::lexer::Kind;
 /// Abstract syntax tree based on expressions as a central language concept.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
-    /// Literal value, such as an `Int`, `Double` or `Str`
+    /// Literal value, such as `Integer`, `Double` or `String`
     Literal(Literal),
     /// Identifier, storing its name.
     Identifier(String),
@@ -24,7 +24,10 @@ pub enum Expr {
 /// Literals are representations of the language's primitive types.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
-    Int(usize),
+    /// `Integer` literal value
+    Integer(usize),
+    /// `Double` literal value
     Double(f64),
+    /// `String` literal value
     String(String),
 }

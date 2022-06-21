@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use super::token::Kind;
-use crate::kind;
+use crate::tk;
 
 lazy_static! {
     static ref COMMENT_REGEX: Regex =
@@ -13,8 +13,9 @@ lazy_static! {
         Regex::new(r#"^"((\\"|\\\\)|[^\\"])*""#).expect("String regex must be valid.");
     static ref DOUBLE_REGEX: Regex =
         Regex::new(r#"^((\d+\.\d+)|(\.\d+))([eE][-+]?\d+)?"#).expect("Double regex must be valid.");
-    static ref INT_REGEX: Regex = Regex::new(r#"^(0|\d+)"#).expect("Double regex must be valid.");
-    static ref IDENT_REGEX: Regex =
+    static ref INTEGER_REGEX: Regex =
+        Regex::new(r#"^(0|\d+)"#).expect("Integer regex must be valid.");
+    static ref IDENTIFIER_REGEX: Regex =
         Regex::new(r#"^([a-zA-Z]|_)([a-zA-Z]|_|\d)*"#).expect("Identifier regex must be valid.");
 }
 
@@ -57,95 +58,95 @@ pub(crate) fn definitions() -> Vec<Rule> {
     vec![
         // Single characters
         Rule {
-            kind: kind![!],
+            kind: tk![!],
             matches: |input| match_single_char(input, '!'),
         },
         Rule {
-            kind: kind![=],
+            kind: tk![=],
             matches: |input| match_single_char(input, '='),
         },
         Rule {
-            kind: kind![/],
+            kind: tk![/],
             matches: |input| match_single_char(input, '/'),
         },
         Rule {
-            kind: kind![_],
+            kind: tk![_],
             matches: |input| match_single_char(input, '_'),
         },
         Rule {
-            kind: kind![<],
+            kind: tk![<],
             matches: |input| match_single_char(input, '<'),
         },
         Rule {
-            kind: kind![>],
+            kind: tk![>],
             matches: |input| match_single_char(input, '>'),
         },
         // Multiple characters
         Rule {
-            kind: kind![==],
+            kind: tk![==],
             matches: |input| match_multi_char(input, '=', '='),
         },
         Rule {
-            kind: kind![!=],
+            kind: tk![!=],
             matches: |input| match_multi_char(input, '!', '='),
         },
         Rule {
-            kind: kind![&&],
+            kind: tk![&&],
             matches: |input| match_multi_char(input, '&', '&'),
         },
         Rule {
-            kind: kind![||],
+            kind: tk![||],
             matches: |input| match_multi_char(input, '|', '|'),
         },
         Rule {
-            kind: kind![<=],
+            kind: tk![<=],
             matches: |input| match_multi_char(input, '<', '='),
         },
         Rule {
-            kind: kind![>=],
+            kind: tk![>=],
             matches: |input| match_multi_char(input, '>', '='),
         },
         // Keywords
         Rule {
-            kind: kind![let],
+            kind: tk![let],
             matches: |input| match_keyword(input, "let"),
         },
         Rule {
-            kind: kind![fn],
+            kind: tk![fn],
             matches: |input| match_keyword(input, "fn"),
         },
         Rule {
-            kind: kind![struct],
+            kind: tk![struct],
             matches: |input| match_keyword(input, "struct"),
         },
         Rule {
-            kind: kind![if],
+            kind: tk![if],
             matches: |input| match_keyword(input, "if"),
         },
         Rule {
-            kind: kind![else],
+            kind: tk![else],
             matches: |input| match_keyword(input, "else"),
         },
         // Patterns (regular expressions)
         Rule {
-            kind: kind![string],
-            matches: move |input| match_regex(input, &STRING_REGEX),
+            kind: tk![string],
+            matches: |input| match_regex(input, &STRING_REGEX),
         },
         Rule {
-            kind: kind![comment],
-            matches: move |input| match_regex(input, &COMMENT_REGEX),
+            kind: tk![comment],
+            matches: |input| match_regex(input, &COMMENT_REGEX),
         },
         Rule {
-            kind: kind![int],
-            matches: |input| match_regex(input, &INT_REGEX),
+            kind: tk![integer],
+            matches: |input| match_regex(input, &INTEGER_REGEX),
         },
         Rule {
-            kind: kind![double],
+            kind: tk![double],
             matches: |input| match_regex(input, &DOUBLE_REGEX),
         },
         Rule {
-            kind: kind![ident],
-            matches: |input| match_regex(input, &IDENT_REGEX),
+            kind: tk![identifier],
+            matches: |input| match_regex(input, &IDENTIFIER_REGEX),
         },
     ]
 }
@@ -155,20 +156,20 @@ pub(crate) fn definitions() -> Vec<Rule> {
 /// Tokens that may only be a part of a larger token kind return `None`.
 pub(crate) const fn unambiguous_single_char(c: char) -> Option<Kind> {
     Some(match c {
-        '+' => kind![+],
-        '-' => kind![-],
-        '*' => kind![*],
-        '^' => kind![^],
-        '.' => kind![.],
-        ',' => kind![,],
-        ':' => kind![:],
-        ';' => kind![;],
-        '[' => kind!['['],
-        ']' => kind![']'],
-        '(' => kind!['('],
-        ')' => kind![')'],
-        '{' => kind!['{'],
-        '}' => kind!['}'],
+        '+' => tk![+],
+        '-' => tk![-],
+        '*' => tk![*],
+        '^' => tk![^],
+        '.' => tk![.],
+        ',' => tk![,],
+        ':' => tk![:],
+        ';' => tk![;],
+        '[' => tk!['['],
+        ']' => tk![']'],
+        '(' => tk!['('],
+        ')' => tk![')'],
+        '{' => tk!['{'],
+        '}' => tk!['}'],
         _ => return None,
     })
 }

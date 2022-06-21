@@ -1,5 +1,6 @@
-use transient::kind;
 use transient::lexer::*;
+use transient::parser::{ast, Parser};
+use transient::tk;
 
 /// Walks `$tokens` and compares them to the given token kinds.
 macro_rules! assert_tokens {
@@ -14,6 +15,11 @@ macro_rules! assert_tokens {
     };
 }
 
+fn expression_parser(input: &str) -> ast::Expr {
+    let mut parser = Parser::new(input);
+    parser.parse_expression()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -25,15 +31,7 @@ mod tests {
         let tokens = lexer.tokenize();
         assert_tokens!(
             tokens,
-            [
-                kind![+],
-                kind![-],
-                kind!['('],
-                kind![.],
-                kind![')'],
-                kind![:],
-                kind![EOF],
-            ]
+            [tk![+], tk![-], tk!['('], tk![.], tk![')'], tk![:], tk![EOF],]
         );
     }
 
@@ -42,7 +40,7 @@ mod tests {
         let input = "{$$$$$$$+";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
-        assert_tokens!(tokens, [kind!['{'], kind![error], kind![+], kind![EOF],]);
+        assert_tokens!(tokens, [tk!['{'], tk![error], tk![+], tk![EOF],]);
     }
 
     #[test]
@@ -52,7 +50,7 @@ mod tests {
             let mut lexer = Lexer::new(input);
             let tokens = lexer.tokenize();
             let dot = tokens[3];
-            assert_eq!(dot.kind(), kind![.]);
+            assert_eq!(dot.kind(), tk![.]);
             assert_eq!(dot.span(), Span::new(3, 4));
         }
         {
@@ -60,7 +58,7 @@ mod tests {
             let mut lexer = Lexer::new(input);
             let tokens = lexer.tokenize();
             let error = tokens[1];
-            assert_eq!(error.kind(), kind![error]);
+            assert_eq!(error.kind(), tk![error]);
             assert_eq!(error.span(), Span::new(1, 8));
         }
     }
@@ -71,37 +69,29 @@ mod tests {
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
         let leading_whitespace = &tokens[0];
-        assert_eq!(leading_whitespace.kind(), kind![ws]);
+        assert_eq!(leading_whitespace.kind(), tk![ws]);
         assert_eq!(leading_whitespace.len(), 4);
 
         let between_plus_and_minus = &tokens[2];
-        assert_eq!(between_plus_and_minus.kind(), kind![ws]);
+        assert_eq!(between_plus_and_minus.kind(), tk![ws]);
         assert_eq!(between_plus_and_minus.len(), 2);
 
         let between_minus_and_left_paren = &tokens[4];
-        assert_eq!(between_minus_and_left_paren.kind(), kind![ws]);
+        assert_eq!(between_minus_and_left_paren.kind(), tk![ws]);
         assert_eq!(between_minus_and_left_paren.len(), 1);
 
         let trailing_whitespace = &tokens[9];
-        assert_eq!(trailing_whitespace.kind(), kind![ws]);
+        assert_eq!(trailing_whitespace.kind(), tk![ws]);
         assert_eq!(trailing_whitespace.len(), 2);
 
         let tokens = tokens
             .into_iter()
-            .filter(|t| t.kind() != kind![ws])
+            .filter(|t| t.kind() != tk![ws])
             .collect::<Vec<_>>();
 
         assert_tokens!(
             tokens,
-            [
-                kind![+],
-                kind![-],
-                kind!['('],
-                kind![.],
-                kind![')'],
-                kind![:],
-                kind![EOF],
-            ]
+            [tk![+], tk![-], tk!['('], tk![.], tk![')'], tk![:], tk![EOF],]
         );
     }
 
@@ -112,15 +102,7 @@ mod tests {
         let tokens = lexer.tokenize();
         assert_tokens!(
             tokens,
-            [
-                kind![&&],
-                kind![=],
-                kind![<=],
-                kind![_],
-                kind![!=],
-                kind![||],
-                kind![EOF],
-            ]
+            [tk![&&], tk![=], tk![<=], tk![_], tk![!=], tk![||], tk![EOF],]
         );
     }
 
@@ -132,33 +114,26 @@ mod tests {
         assert_tokens!(
             tokens,
             [
-                kind![let],
-                kind![ws],
-                kind![fn],
-                kind![ws],
-                kind![struct],
-                kind![ws],
-                kind![if],
-                kind![ws],
-                kind![else],
-                kind![EOF],
+                tk![let],
+                tk![ws],
+                tk![fn],
+                tk![ws],
+                tk![struct],
+                tk![ws],
+                tk![if],
+                tk![ws],
+                tk![else],
+                tk![EOF],
             ]
         );
 
         let tokens = tokens
             .iter()
-            .filter(|&t| t.kind() != kind![ws])
+            .filter(|&t| t.kind() != tk![ws])
             .collect::<Vec<_>>();
         assert_tokens!(
             tokens,
-            [
-                kind![let],
-                kind![fn],
-                kind![struct],
-                kind![if],
-                kind![else],
-                kind![EOF],
-            ]
+            [tk![let], tk![fn], tk![struct], tk![if], tk![else], tk![EOF],]
         )
     }
 
@@ -180,7 +155,7 @@ fn build_project(repo_name: String, strict: bool) {
         let tokens = lexer
             .tokenize()
             .into_iter()
-            .filter(|t| t.kind() != kind![ws])
+            .filter(|t| t.kind() != tk![ws])
             .collect::<Vec<_>>();
 
         #[rustfmt::skip]
@@ -188,32 +163,32 @@ fn build_project(repo_name: String, strict: bool) {
             tokens,
             [
                 // comment line
-                kind![comment],
+                tk![comment],
                 // function signature
-                kind![fn], kind![ident], kind!['('],
-                    kind![ident], kind![:], kind![ident], kind![,],
-                    kind![ident], kind![:], kind![ident],
-                kind![')'], kind!['{'],
+                tk![fn], tk![identifier], tk!['('],
+                    tk![identifier], tk![:], tk![identifier], tk![,],
+                    tk![identifier], tk![:], tk![identifier],
+                tk![')'], tk!['{'],
                     // function body
                     // `time` assignment
-                    kind![let], kind![ident], kind![=], kind![string], kind![+], kind![int],
-                        kind![/], kind![double], kind![^], kind![int], kind![;],
+                    tk![let], tk![identifier], tk![=], tk![string], tk![+], tk![integer],
+                        tk![/], tk![double], tk![^], tk![integer], tk![;],
                     // `iter` assignment
-                    kind![let], kind![ident], kind![=], kind![ident], kind![.], kind![ident],
-                        kind!['('], kind![')'], kind![;],
+                    tk![let], tk![identifier], tk![=], tk![identifier], tk![.], tk![identifier],
+                        tk!['('], tk![')'], tk![;],
                     // if let Some ... expr
-                    kind![if], kind![let], kind![ident], kind!['('], kind![ident], kind![')'],
-                        kind![=], kind![ident], kind![.], kind![ident], kind!['('], kind![')'],
-                    kind!['{'],
+                    tk![if], tk![let], tk![identifier], tk!['('], tk![identifier], tk![')'],
+                        tk![=], tk![identifier], tk![.], tk![identifier], tk!['('], tk![')'],
+                    tk!['{'],
                         // `time` reassignment
-                        kind![ident], kind![=], kind![ident], kind![+], kind![ident], kind![;],
+                        tk![identifier], tk![=], tk![identifier], tk![+], tk![identifier], tk![;],
                     // else if
-                    kind!['}'], kind![else], kind![if], kind![!], kind![ident], kind!['{'],
+                    tk!['}'], tk![else], tk![if], tk![!], tk![identifier], tk!['{'],
                         // `time` re-assignment
-                        kind![ident], kind![=], kind![ident], kind![+], kind![string], kind![;],
-                    kind!['}'], // end if
-                kind!['}'], // end fn
-            kind![EOF], // EOF
+                        tk![identifier], tk![=], tk![identifier], tk![+], tk![string], tk![;],
+                    tk!['}'], // end if
+                tk!['}'], // end fn
+            tk![EOF], // EOF
             ]
         );
     }
@@ -229,28 +204,19 @@ struct Foo<T> {
         let tokens: Vec<_> = lexer
             .tokenize()
             .into_iter()
-            .filter(|t| t.kind() != kind![ws])
+            .filter(|t| t.kind() != tk![ws])
             .collect();
+
+        #[rustfmt::skip]
         assert_tokens!(
             tokens,
             [
                 // struct definition with generic type
-                kind![struct],
-                kind![ident],
-                kind![<],
-                kind![ident],
-                kind![>],
-                kind!['{'],
+                tk![struct], tk![identifier], tk![<], tk![identifier], tk![>], tk!['{'],
                 // struct field with type `Bar<T>`
-                kind![ident],
-                kind![:],
-                kind![ident],
-                kind![<],
-                kind![ident],
-                kind![>],
-                kind![,],
-                kind!['}'], // end struct
-                kind![EOF],
+                    tk![identifier], tk![:], tk![identifier], tk![<], tk![identifier], tk![>], tk![,],
+                tk!['}'], // end struct
+                tk![EOF],
             ]
         );
         let bar_property = tokens[6];
@@ -260,5 +226,55 @@ struct Foo<T> {
         let foo_struct_def = tokens[1];
         assert_eq!(foo_struct_def.span(), Span::new(8, 11));
         assert_eq!(foo_struct_def.text(input), "Foo");
+    }
+
+    #[test]
+    fn parse_expressions() {
+        let expr = expression_parser("42");
+        assert_eq!(expr, ast::Expr::Literal(ast::Literal::Integer(42)));
+        let expr = expression_parser("  2.7768  ");
+        assert_eq!(expr, ast::Expr::Literal(ast::Literal::Double(2.7768)));
+        let expr = expression_parser("\"this_is_a_string\"");
+        assert_eq!(
+            expr,
+            ast::Expr::Literal(ast::Literal::String("this_is_a_string".to_string()))
+        );
+        let expr = expression_parser(r#""this is 0123456789 also a string""#);
+        assert_eq!(
+            expr,
+            ast::Expr::Literal(ast::Literal::String(
+                "this is 0123456789 also a string".to_string()
+            ))
+        );
+        let expr = expression_parser("BuildCommand");
+        assert_eq!(expr, ast::Expr::Identifier("BuildCommand".to_string()));
+        let expr = expression_parser("send  (  x, 2) ");
+        assert_eq!(
+            expr,
+            ast::Expr::FunctionCall {
+                name: "send".to_string(),
+                args: vec![
+                    ast::Expr::Identifier("x".to_string()),
+                    ast::Expr::Literal(ast::Literal::Integer(2))
+                ]
+            }
+        );
+        let expr = expression_parser("!should_work");
+        assert_eq!(
+            expr,
+            ast::Expr::PrefixOperator {
+                op: tk![!],
+                expr: Box::new(ast::Expr::Identifier("should_work".to_string()))
+            }
+        );
+        // TODO: Add infix binop parsing; case passes (correctly) but cannot yet handle trailing `.toString()`
+        let expr = expression_parser("-20.toString()");
+        assert_eq!(
+            expr,
+            ast::Expr::PrefixOperator {
+                op: tk![-],
+                expr: Box::new(ast::Expr::Literal(ast::Literal::Integer(20)))
+            }
+        );
     }
 }

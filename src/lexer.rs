@@ -3,7 +3,7 @@
 use rules::{definitions, unambiguous_single_char, Rule};
 pub use token::{Kind, Span, Token};
 
-use crate::kind;
+use crate::tk;
 
 pub mod macros;
 mod rules;
@@ -54,7 +54,7 @@ impl<'input> Lexer<'input> {
                     .unwrap()
                     .0
                     + 1,
-                kind![ws],
+                tk![ws],
             )
             /* Unambiguous single-character tokens */
         } else if let Some(kind) = unambiguous_single_char(next) {
@@ -88,7 +88,7 @@ impl<'input> Lexer<'input> {
 
         let len = len;
         self.position = start + len;
-        Token::new(kind![error], Span::new(start, start + len))
+        Token::new(tk![error], Span::new(start, start + len))
     }
 }
 
@@ -104,7 +104,7 @@ impl<'input> Iterator for Lexer<'input> {
             self.eof = true;
 
             Some(Token::new(
-                kind![EOF],
+                tk![EOF],
                 Span::new(self.position, self.position),
             ))
         } else {
