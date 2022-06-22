@@ -9,7 +9,7 @@ where
     I: Iterator<Item = Token>,
 {
     pub fn parse_expression(&mut self) -> ast::Expr {
-        let lhs = match self.peek() {
+        let mut lhs = match self.peek() {
             literal @ tk![integer] | literal @ tk![double] | literal @ tk![string] => {
                 let text = {
                     // The calls on `self` need to be split as `next` takes a `&mut self`.
@@ -77,9 +77,36 @@ where
                     expr: Box::new(expr),
                 }
             }
-
             kind => panic!("Unknown start of expression: `{kind}`"),
         };
+
+        loop {
+            let op = match self.peek() {
+                op @ tk![+]
+                | op @ tk![-]
+                | op @ tk![*]
+                | op @ tk![/]
+                | op @ tk![^]
+                | op @ tk![==]
+                | op @ tk![!=]
+                | op @ tk![<]
+                | op @ tk![<=]
+                | op @ tk![>]
+                | op @ tk![>=]
+                | op @ tk![!] => op,
+                tk![')'] | tk!['}'] | tk![,] | tk![;] => break,
+                tk![EOF] => break,
+                unknown => panic!("Unrecognized binary operator: `{unknown}`"),
+            };
+
+            self.skip(op);
+            let rhs = self.parse_expression();
+            lhs = ast::Expr::InfixOperator {
+                op,
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+            }
+        }
 
         lhs
     }

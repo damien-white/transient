@@ -15,11 +15,6 @@ macro_rules! assert_tokens {
     };
 }
 
-fn expression_parser(input: &str) -> ast::Expr {
-    let mut parser = Parser::new(input);
-    parser.parse_expression()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -230,25 +225,30 @@ struct Foo<T> {
 
     #[test]
     fn parse_expressions() {
-        let expr = expression_parser("42");
+        fn parse(input: &str) -> ast::Expr {
+            let mut parser = Parser::new(input);
+            parser.parse_expression()
+        }
+
+        let expr = parse("42");
         assert_eq!(expr, ast::Expr::Literal(ast::Literal::Integer(42)));
-        let expr = expression_parser("  2.7768  ");
+        let expr = parse("  2.7768  ");
         assert_eq!(expr, ast::Expr::Literal(ast::Literal::Double(2.7768)));
-        let expr = expression_parser("\"this_is_a_string\"");
+        let expr = parse("\"this_is_a_string\"");
         assert_eq!(
             expr,
             ast::Expr::Literal(ast::Literal::String("this_is_a_string".to_string()))
         );
-        let expr = expression_parser(r#""this is 0123456789 also a string""#);
+        let expr = parse(r#""this is 0123456789 also a string""#);
         assert_eq!(
             expr,
             ast::Expr::Literal(ast::Literal::String(
                 "this is 0123456789 also a string".to_string()
             ))
         );
-        let expr = expression_parser("BuildCommand");
+        let expr = parse("BuildCommand");
         assert_eq!(expr, ast::Expr::Identifier("BuildCommand".to_string()));
-        let expr = expression_parser("send  (  x, 2) ");
+        let expr = parse("send  (  x, 2) ");
         assert_eq!(
             expr,
             ast::Expr::FunctionCall {
@@ -259,7 +259,7 @@ struct Foo<T> {
                 ]
             }
         );
-        let expr = expression_parser("!should_work");
+        let expr = parse("!should_work");
         assert_eq!(
             expr,
             ast::Expr::PrefixOperator {
@@ -267,8 +267,7 @@ struct Foo<T> {
                 expr: Box::new(ast::Expr::Identifier("should_work".to_string()))
             }
         );
-        // TODO: Add infix binop parsing; case passes (correctly) but cannot yet handle trailing `.toString()`
-        let expr = expression_parser("-20.toString()");
+        let expr = parse("(-20)");
         assert_eq!(
             expr,
             ast::Expr::PrefixOperator {
@@ -276,5 +275,17 @@ struct Foo<T> {
                 expr: Box::new(ast::Expr::Literal(ast::Literal::Integer(20)))
             }
         );
+    }
+
+    // TODO: Write tests for binary expressions and handle associativity
+    #[test]
+    fn parse_binary_expressions() {
+        fn parse(input: &str) -> ast::Expr {
+            let mut parser = Parser::new(input);
+            parser.parse_expression()
+        }
+
+        let expr = parse("4 + 2 * 3");
+        assert_eq!(expr.to_string(), "(4 + (2 * 3))");
     }
 }

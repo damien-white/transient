@@ -250,8 +250,6 @@ impl fmt::Display for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::tk;
-
     use super::*;
 
     #[test]
