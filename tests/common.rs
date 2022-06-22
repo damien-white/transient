@@ -227,7 +227,7 @@ struct Foo<T> {
     fn parse_expressions() {
         fn parse(input: &str) -> ast::Expr {
             let mut parser = Parser::new(input);
-            parser.parse_expression()
+            parser.expression()
         }
 
         let expr = parse("42");
@@ -255,8 +255,8 @@ struct Foo<T> {
                 name: "send".to_string(),
                 args: vec![
                     ast::Expr::Identifier("x".to_string()),
-                    ast::Expr::Literal(ast::Literal::Integer(2))
-                ]
+                    ast::Expr::Literal(ast::Literal::Integer(2)),
+                ],
             }
         );
         let expr = parse("!should_work");
@@ -264,7 +264,7 @@ struct Foo<T> {
             expr,
             ast::Expr::PrefixOperator {
                 op: tk![!],
-                expr: Box::new(ast::Expr::Identifier("should_work".to_string()))
+                expr: Box::new(ast::Expr::Identifier("should_work".to_string())),
             }
         );
         let expr = parse("(-20)");
@@ -272,20 +272,51 @@ struct Foo<T> {
             expr,
             ast::Expr::PrefixOperator {
                 op: tk![-],
-                expr: Box::new(ast::Expr::Literal(ast::Literal::Integer(20)))
+                expr: Box::new(ast::Expr::Literal(ast::Literal::Integer(20))),
             }
         );
     }
 
-    // TODO: Write tests for binary expressions and handle associativity
     #[test]
     fn parse_binary_expressions() {
         fn parse(input: &str) -> ast::Expr {
             let mut parser = Parser::new(input);
-            parser.parse_expression()
+            parser.expression()
         }
 
         let expr = parse("4 + 2 * 3");
         assert_eq!(expr.to_string(), "(4 + (2 * 3))");
+
+        let expr = parse("4 * 2 + 3");
+        assert_eq!(expr.to_string(), "((4 * 2) + 3)");
+
+        let expr = parse("4 - 2 - 3");
+        assert_eq!(expr.to_string(), "((4 - 2) - 3)");
+
+        let expr = parse("4 ^ 2 ^ 3");
+        assert_eq!(expr.to_string(), "(4 ^ (2 ^ 3))");
+
+        let expr = parse(r#"45.7 + 2 + 3 * 7 ^ 2 ^ 3 / 4 > 5 && test - 8 / 2 == "end expression""#);
+        assert_eq!(
+            expr.to_string(),
+            r#"((((45.7 + 2) + ((3 * (7 ^ (2 ^ 3))) / 4)) > 5) && ((test - (8 / 2)) == "end expression"))"#
+        );
+
+        let expr = parse("2.0 / ((3.0 + 4.0) * (5.0 - 6.0)) * 7.0");
+        assert_eq!(expr.to_string(), "((2 / ((3 + 4) * (5 - 6))) * 7)");
+
+        let expr = parse("min(test + 4, sin(2 * PI))");
+        assert_eq!(expr.to_string(), "min((test + 4),sin((2 * PI),),)");
+    }
+
+    #[test]
+    fn parse_postfix_expressions() {
+        fn parse(input: &str) -> ast::Expr {
+            let mut parser = Parser::new(input);
+            parser.expression()
+        }
+
+        let expr = parse("4 + -2! * 3");
+        assert_eq!(expr.to_string(), "(4 + ((- (2 !)) * 3))");
     }
 }

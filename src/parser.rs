@@ -5,7 +5,8 @@ use crate::lexer::{Kind, Lexer, Token};
 use crate::tk;
 
 pub mod ast;
-pub mod expression;
+mod expression;
+mod operator;
 
 /// Left-to-right, leftmost derivation parser implementation - LL(1) parser.
 pub struct Parser<'input, I>
