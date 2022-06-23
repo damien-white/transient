@@ -46,37 +46,37 @@ where
                 };
 
                 // Classify the identifier; identifier or function call
-                if !self.compare(tk!['(']) {
+                if !self.at(tk!['(']) {
                     // Identifier
                     ast::Expr::Identifier(name)
                 } else {
                     // function call
                     let mut args = vec![];
-                    self.skip(tk!['(']);
+                    self.consume(tk!['(']);
                     // function arguments
-                    while !self.compare(tk![')']) {
+                    while !self.at(tk![')']) {
                         let arg = self.parse_expression(0);
                         args.push(arg);
-                        if self.compare(tk![,]) {
-                            self.skip(tk![,]);
+                        if self.at(tk![,]) {
+                            self.consume(tk![,]);
                         }
                     }
 
-                    self.skip(tk![')']);
+                    self.consume(tk![')']);
                     ast::Expr::FunctionCall { name, args }
                 }
             }
 
             tk!['('] => {
                 // Grouped expressions are parsed recursively
-                self.skip(tk!['(']);
+                self.consume(tk!['(']);
                 let expr = self.parse_expression(0);
-                self.skip(tk![')']);
+                self.consume(tk![')']);
                 expr
             }
 
             op @ tk![+] | op @ tk![-] | op @ tk![!] => {
-                self.skip(op);
+                self.consume(op);
                 let ((), right_bp) = op.prefix_binding_power();
                 let expr = self.parse_expression(right_bp);
                 ast::Expr::PrefixOperator {
@@ -114,7 +114,7 @@ where
                     break;
                 }
 
-                self.skip(op);
+                self.consume(op);
                 lhs = ast::Expr::PostfixOperator {
                     op,
                     expr: Box::new(lhs),
@@ -129,7 +129,7 @@ where
                     break;
                 }
 
-                self.skip(op);
+                self.consume(op);
                 let rhs = self.parse_expression(right_bp);
                 lhs = ast::Expr::InfixOperator {
                     op,

@@ -6,6 +6,7 @@ use crate::tk;
 
 pub mod ast;
 mod expression;
+mod hierarchy;
 mod operator;
 
 /// Left-to-right, leftmost derivation parser implementation - LL(1) parser.
@@ -71,7 +72,7 @@ where
     }
 
     /// Checks whether the next token is a particular `Kind` of token.
-    pub(crate) fn compare(&mut self, kind: Kind) -> bool {
+    pub(crate) fn at(&mut self, kind: Kind) -> bool {
         self.peek().eq(&kind)
     }
 
@@ -80,8 +81,8 @@ where
         self.tokens.next()
     }
 
-    /// Skips a single token while verifying it is the expected token kind.
-    pub(crate) fn skip(&mut self, expected: Kind) {
+    /// Consumes a single token while verifying it is the expected token kind.
+    pub(crate) fn consume(&mut self, expected: Kind) {
         let token = self
             .next()
             .expect(&*format!("Found `EOF`, but expected: `{}`", expected));

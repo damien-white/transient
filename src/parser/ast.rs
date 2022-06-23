@@ -2,6 +2,26 @@ use std::fmt;
 
 use crate::lexer::Kind;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Stmt {
+    Let {
+        var: String,
+        value: Box<Expr>,
+    },
+    Assignment {
+        var: String,
+        value: Box<Expr>,
+    },
+    If {
+        cond: Box<Expr>,
+        body: Vec<Stmt>,
+        else_stmt: Option<Box<Stmt>>,
+    },
+    Block {
+        stmts: Vec<Stmt>,
+    },
+}
+
 /// Abstract syntax tree based on expressions as a central language concept.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
